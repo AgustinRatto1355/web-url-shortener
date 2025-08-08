@@ -1,34 +1,45 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-//import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import './App.css';
+import { UrlForm } from './components/UrlForm';
+import { UrlResult } from './components/UrlResult';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [shortUrl, setShortUrl] = useState('');
+
+  const handleShorten = async (url: string) => {
+    try {
+      const res = await fetch('http://localhost:3000/urls/shorten', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Server error:', errorText);
+        return;
+      }
+
+      const data = await res.json();
+      if (data.shortenedUrl) {
+        setShortUrl(data.shortenedUrl);
+      } else {
+        console.error('No shortenedUrl in response');
+      }
+    } catch (error) {
+      console.error('Fetch error:', error);
+    }
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="container">
+      <div className="box">
+        <h1 className="title">URL Shortener</h1>
+        <UrlForm onSubmit={handleShorten} />
+        {shortUrl && <UrlResult shortUrl={shortUrl} />}
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;
